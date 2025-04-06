@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+    <head>
+        {% if title %}
+        <title>{{ title }}</title>
+        {% else %}
+        <title>Добро пожаловать</title>
+        {% endif %}
+        <style>
+            body {
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.6;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                color: #333;
+            }
+            a {
+                color: #2c3e50;
+                text-decoration: none;
+                margin-right: 15px;
+            }
+            a:hover {
+                color: #1a73e8;
+            }
+            hr {
+                border: 0;
+                height: 1px;
+                background: #e0e0e0;
+                margin: 20px 0;
+            }
+            ul {
+                padding-left: 20px;
+            }
+            li {
+                margin-bottom: 5px;
+            }
+            div {
+                margin-bottom: 15px;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <a href="{{ url_for('index') }}">Главная</a>
+            {% if current_user.is_anonymous %}
+            <a href="{{ url_for('login') }}">Вход</a>
+            {% else %}
+            <a href="{{ url_for('user', username=current_user.username) }}">Профиль</a>
+            <a href="{{ url_for('logout') }}">Выход</a>
+            {% endif %}
+        </div>
+        <hr>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </body>
+</html>
