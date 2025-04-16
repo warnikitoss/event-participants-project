@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .scan-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+
+    .scan-title {
+        font-size: 1.8rem;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+    }
+
+    .scan-instructions {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .video-container {
+        width: 100%;
+        margin: 1rem auto;
+        position: relative;
+    }
+
+    #qr-video {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .scan-result {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .manual-input {
+        margin-top: 2rem;
+    }
+
+    .manual-input input {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .submit-btn {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .submit-btn:hover {
+        background: #2563eb;
+    }
+</style>
+
+<div class="scan-container">
+    <h1 class="scan-title">Сканировать QR-код</h1>
+
+    <p class="scan-instructions">
+        Отсканируйте QR-код другого пользователя, чтобы получить временный доступ
+        для редактирования его профиля.
+    </p>
+
+    <div class="video-container">
+        <video id="qr-video" playsinline></video>
+    </div>
+
+    <div class="scan-result" id="scan-result">
+        <p>Найден пользователь: <span id="user-name"></span></p>
+        <form method="post" id="qr-form">
+            <input type="hidden" name="qr_data" id="qr-data">
+            <button type="submit" class="submit-btn">Перейти к редактированию</button>
+        </form>
+    </div>
+
+    <div class="manual-input">
+        <p>Или введите код вручную:</p>
+        <form method="post">
+            <input type="text" name="qr_data" placeholder="Данные QR-кода">
+            <button type="submit" class="submit-btn">Подтвердить</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+    const video = document.getElementById("qr-video");
+    const scanResult = document.getElementById("scan-result");
+    const userSpan = document.getElementById("user-name");
+    const qrDataInput = document.getElementById("qr-data");
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(function(stream) {
+            video.srcObject = stream;
+            video.setAttribute("playsinline", true);
+            video.play();
+            requestAnimationFrame(tick);
+        })
+        .catch(function(err) {
+            console.error("Ошибка доступа к камере:", err);
+        });
+
+    function tick() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+
+            if (code) {
+                const parts = code.data.split(':');
+                if (parts.length === 2) {
+                    fetch(`/user/${parts[0]}`)
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const username = doc.querySelector('.username')?.textContent || 'Неизвестный пользователь';
+
+                            userSpan.textContent = username;
+                            qrDataInput.value = code.data;
+                            scanResult.style.display = 'block';
+                        });
+                }
+            }
+        }
+        requestAnimationFrame(tick);
+    }
+</script>
+{% endblock %}

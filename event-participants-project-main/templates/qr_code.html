@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .qr-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2.5rem;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .qr-title {
+        font-size: 1.8rem;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .qr-image {
+        width: 260px;
+        height: 260px;
+        margin: 0 auto 1.8rem;
+        border: 1px solid #e0e0e0;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .qr-instructions {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 1.8rem;
+        font-size: 1.05rem;
+    }
+
+    .qr-expiration {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-top: 1.2rem;
+        padding: 0.8rem;
+        background: #f9fafb;
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    .refresh-btn {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.9rem 1.8rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    }
+
+    .refresh-btn:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .qr-footer {
+        margin-top: 2rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+</style>
+
+<div class="qr-container">
+    <h1 class="qr-title">Мой QR-код</h1>
+
+    <p class="qr-instructions">
+        Поделитесь этим QR-кодом, чтобы предоставить временный доступ<br>
+        для редактирования вашего профиля. Доступ действителен 1 час.
+    </p>
+
+    <div class="qr-image">
+        <img src="{{ current_user.get_qr_code() }}" alt="Ваш QR-код" width="260" height="260">
+    </div>
+
+    <div class="qr-expiration">
+        <i class="far fa-clock" style="margin-right: 6px;"></i>
+        Действителен до: {{ expiration_time }}
+    </div>
+
+    <form action="{{ url_for('generate_qr') }}" method="post">
+        <button type="submit" class="refresh-btn">
+            <i class="fas fa-sync-alt" style="margin-right: 8px;"></i>
+            Сгенерировать новый код
+        </button>
+    </form>
+
+    <div class="qr-footer">
+        <i class="fas fa-shield-alt" style="margin-right: 5px;"></i>
+        Код автоматически обновляется при каждом посещении этой страницы
+    </div>
+</div>
+
+<!-- Добавляем Font Awesome для иконок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
